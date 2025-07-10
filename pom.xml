@@ -4,26 +4,30 @@
                              http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
+  <parent>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-parent</artifactId>
+    <version>3.1.5</version> <!-- or the version you're targeting -->
+    <relativePath/> <!-- lookup parent from repository -->
+  </parent>
+
   <groupId>com.example</groupId>
   <artifactId>springboot-app</artifactId>
   <version>1.0.0</version>
   <packaging>jar</packaging>
 
-  <name>Spring Boot App</name>
-  <description>Sample Spring Boot project for Jenkins pipeline</description>
+  <name>springboot-app</name>
+  <description>Sample Spring Boot App</description>
 
   <properties>
     <java.version>17</java.version>
   </properties>
 
   <dependencies>
-    <!-- Spring Boot Starter -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter</artifactId>
     </dependency>
-
-    <!-- Test Dependency -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-test</artifactId>
@@ -33,7 +37,6 @@
 
   <build>
     <plugins>
-      <!-- Spring Boot Plugin -->
       <plugin>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-maven-plugin</artifactId>
