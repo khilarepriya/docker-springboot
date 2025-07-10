@@ -181,8 +181,10 @@ pipeline {
               echo "✅ Docker image pushed successfully!"
 
               echo "⚙️ Generating systemd service from template..."
-              sed "s/__BUILD_ID__/${BUILD_ID}/g" /etc/systemd/system/springboot-app-template.service | sudo tee /etc/systemd/system/springboot-app.service > /dev/null
+              sed "s/__BUILD_ID__/${BUILD_ID}/g" /etc/systemd/system/springboot-app-template.service | sudo tee /etc/systemd/system/springboot-app.service
               sudo systemctl daemon-reload
+              sudo systemctl restart springboot-app
+
             '''
           }
         }
