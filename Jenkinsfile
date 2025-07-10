@@ -3,10 +3,10 @@ pipeline {
 
   environment {
     SONAR_URL = 'http://ec2-13-202-47-19.ap-south-1.compute.amazonaws.com:15998/'
-    SONAR_PROJECT = 'docker-java1'
+    SONAR_PROJECT = 'docker-springboot'
     EMAIL_RECIPIENT = 'p.khilare@accenture.com'
-    SERVICE_NAME = 'java-app'
-    DOCKER_HUB_REPO = 'priyanka015/java'
+    SERVICE_NAME = 'springboot-app'
+    DOCKER_HUB_REPO = 'priyanka015/springboot'
     KUBECONFIG = "/var/lib/jenkins/.kube/config"
     MINIKUBE_HOME = '/var/lib/jenkins'
   }
@@ -14,7 +14,7 @@ pipeline {
   stages {
     stage('Checkout Code') {
       steps {
-        git branch: 'main', credentialsId: 'github-token', url: 'https://github.com/khilarepriya/docker-java1.git'
+        git branch: 'main', credentialsId: 'github-token', url: 'https://github.com/khilarepriya/docker-springboot.git'
       }
     }
 
@@ -249,7 +249,7 @@ pipeline {
             echo "Checking systemd service status..."
             sudo systemctl status ${SERVICE_NAME}.service
             echo "Performing sanity check via curl..."
-            if curl -f http://localhost:9091/health; then
+            if curl -f http://localhost:7070/health; then
               echo "Sanity check passed"
             else
               echo "Sanity check failed"
