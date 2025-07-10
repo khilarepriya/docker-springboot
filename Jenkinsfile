@@ -156,32 +156,39 @@ pipeline {
       steps {
         script {
           env.IMAGE_NAME = "${DOCKER_HUB_REPO}:${BUILD_ID}"
+
           withCredentials([usernamePassword(
-              credentialsId: 'docker-hub-credentials',
-              usernameVariable: 'DOCKER_USER',
-              passwordVariable: 'DOCKER_PASS'
+            credentialsId: 'docker-hub-credentials',
+            usernameVariable: 'DOCKER_USER',
+            passwordVariable: 'DOCKER_PASS'
           )]) {
             sh '''
-              # ✅ Build Java project before Docker build
-              mvn clean package -DskipTests
+              echo "🧪 Building Java project..."
+              mvn clean package -DskipTests || { echo '❌ Maven build failed'; exit 1; }
 
-              # ✅ Docker login and push
-              echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
-              docker build -t $DOCKER_HUB_REPO:$BUILD_ID .
-              docker push $DOCKER_HUB_REPO:$BUILD_ID
+              echo "🔍 Checking for JAR file..."
+              ls -l target/*.jar || { echo '❌ No JAR file found in target/'; exit 1; }
 
-              echo "Docker image pushed successfully!"
+              echo "🐳 Logging into Docker Hub..."
+              echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin || { echo '❌ Docker login failed'; exit 1; }
 
-              # Generate systemd service using template
-              sed "s/__BUILD_ID__/${BUILD_ID}/g" /etc/systemd/system/java-app-template.service | sudo tee /etc/systemd/system/java-app.service
+              echo "📦 Building Docker image: $IMAGE_NAME"
+              docker build -t $IMAGE_NAME . || { echo '❌ Docker build failed'; exit 1; }
+
+              echo "📤 Pushing Docker image to Docker Hub..."
+              docker push $IMAGE_NAME || { echo '❌ Docker push failed'; exit 1; }
+
+              echo "✅ Docker image pushed successfully!"
+
+              echo "⚙️ Generating systemd service from template..."
+              sed "s/__BUILD_ID__/${BUILD_ID}/g" /etc/systemd/system/springboot-app-template.service | sudo tee /etc/systemd/system/springboot-app.service > /dev/null
               sudo systemctl daemon-reload
             '''
           }
         }
       }
     }
-
-
+   
     stage('Start Service After Deployment') {
       steps {
         echo "Starting service ${SERVICE_NAME} after deployment..."
