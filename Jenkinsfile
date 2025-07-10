@@ -188,15 +188,28 @@ pipeline {
 
               echo "✅ Docker image pushed successfully!"
 
-              echo "⚙️ Updating systemd service..."
-              sed "s/__BUILD_ID__=${BUILD_ID}/g" /etc/systemd/system/springboot-app-template.service | sudo tee /etc/systemd/system/${SERVICE_NAME}.service
+              echo "⚙️ Preparing systemd service..."
+
+              # Generate systemd service from template
+              sed "s|__BUILD_ID__|${BUILD_ID}|g" /etc/systemd/system/springboot-app-template.service | sudo tee /etc/systemd/system/${SERVICE_NAME}.service
+
+              # Reload, unmask, enable, and restart the service
               sudo systemctl daemon-reload
-              sudo systemctl restart ${SERVICE_NAME}
+              sudo systemctl unmask ${SERVICE_NAME}.service || true
+              sudo systemctl enable ${SERVICE_NAME}.service
+              sudo systemctl restart ${SERVICE_NAME}.service || {
+                echo "❌ Failed to start ${SERVICE_NAME}.service"
+                sudo journalctl -u ${SERVICE_NAME}.service --no-pager -n 50
+                exit 1
+              }
+
+              echo "✅ Systemd service ${SERVICE_NAME} started successfully!"
             '''
           }
         }
       }
     }
+
    
     stage('Start Service After Deployment') {
       steps {
