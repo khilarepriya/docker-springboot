@@ -252,11 +252,13 @@ pipeline {
     stage('Sanity Test') {
       steps {
         script {
-          sh '''
+          sh """
             echo "Waiting for service to stabilize..."
             sleep 10
-            echo "Checking systemd service status..."
-            sudo systemctl status ${SERVICE_NAME}.service
+
+            echo "Checking systemd service status for: ${SERVICE_NAME}.service"
+            sudo systemctl status ${SERVICE_NAME}.service || exit 1
+
             echo "Performing sanity check via curl..."
             if curl -f http://localhost:7070/health; then
               echo "Sanity check passed"
@@ -264,11 +266,11 @@ pipeline {
               echo "Sanity check failed"
               exit 1
             fi
-          '''
+          """
         }
       }
     }
-  }
+
 
   post {
     always {
