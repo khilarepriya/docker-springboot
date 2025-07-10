@@ -166,8 +166,16 @@ pipeline {
               echo "🧪 Building Java project..."
               mvn clean package -DskipTests || { echo '❌ Maven build failed'; exit 1; }
 
-              echo "🔍 Checking for JAR file..."
-              ls -l target/*.jar || { echo '❌ No JAR file found in target/'; exit 1; }
+              echo "🔍 Locating JAR file..."
+              JAR_FILE=$(ls target/*.jar | head -n 1)
+              if [ ! -f "$JAR_FILE" ]; then
+                echo "❌ No JAR file found!"
+                exit 1
+              fi
+              echo "Found JAR: $JAR_FILE"
+
+              echo "📝 Copying JAR for Docker build..."
+              cp "$JAR_FILE" app.jar
 
               echo "🐳 Logging into Docker Hub..."
               echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin || { echo '❌ Docker login failed'; exit 1; }
@@ -180,11 +188,10 @@ pipeline {
 
               echo "✅ Docker image pushed successfully!"
 
-              echo "⚙️ Generating systemd service from template..."
-              sed "s/__BUILD_ID__/${BUILD_ID}/g" /etc/systemd/system/springboot-app-template.service | sudo tee /etc/systemd/system/springboot-app.service
+              echo "⚙️ Updating systemd service..."
+              sed "s/__BUILD_ID__=${BUILD_ID}/g" /etc/systemd/system/springboot-app-template.service | sudo tee /etc/systemd/system/${SERVICE_NAME}.service
               sudo systemctl daemon-reload
-              sudo systemctl restart springboot-app
-
+              sudo systemctl restart ${SERVICE_NAME}
             '''
           }
         }
